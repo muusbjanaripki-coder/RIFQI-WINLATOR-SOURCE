@@ -1,0 +1,52 @@
+
+name: Build RIFQI WINLATOR APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android components
+        run: |
+          sdkmanager "platform-tools"
+          sdkmanager "platforms;android-35"
+          sdkmanager "build-tools;35.0.0"
+          sdkmanager "ndk;24.0.8215888"
+          sdkmanager "cmake;3.22.1"
+
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleDebug
+
+      - name: Rename APK
+        run: |
+          mkdir -p output
+          cp app/build/outputs/apk/debug/*.apk output/RIFQI-WINLATOR.apk
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: RIFQI-WINLATOR
+          path: output/RIFQI-WINLATOR.apk
+          if-no-files-found: error
